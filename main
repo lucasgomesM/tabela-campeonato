@@ -1,0 +1,233 @@
+import kivy
+from kivy.app import App
+from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.label import Label
+from kivy.uix.togglebutton import ToggleButton
+import sqlite3
+
+class Tela(ScreenManager):
+    pass
+
+class Projeto(App):
+
+        aprovAux = 0#usada para guardar o valor minimo de aproveitamento na função de pesquisa
+        tglComparacao = ''#usada para setar a comparação à ser feita
+        def build(self):
+            return Tela()
+
+        def verificaValores(self,clube, vitorias, empates, jogos, golM, golS):#função para checar os inputs antes de adicionar as informações do time
+            if(clube.isalpha() and vitorias.isnumeric() and empates.isnumeric() and jogos.isnumeric() and golM.isnumeric() and golS.isnumeric()):
+                return True
+            else:
+                return False
+
+        def addClube(self,clube, vitorias, empates, jogos, golM, golS):
+            #função que envia as informações da interface para a classe responsável pelo processamento de dados
+            #da tabela dos times
+            if(self.verificaValores(clube.text,vitorias.text, empates.text, jogos.text , golM.text , golS.text)):
+                TabelaCampeonato().inserir(clube.text, vitorias.text, empates.text, jogos.text, golM.text, golS.text)
+                clube.text = ''
+                vitorias.text = ''
+                empates.text = ''
+                jogos.text = ''
+                golM.text = ''
+                golS.text = ''
+            else:
+                pass
+
+        def adicionaUser(self, screenM, txtUser, txtPassWord):
+            #função que envia os dados do usuario para cadastro no banco de dados
+            if(txtUser.text == '' or txtPassWord.text == ''):
+                pass
+            else:
+                User().inserir(txtUser,txtPassWord)
+
+        def encontraUser(self, screenM, txtUser, txtPassWord, erroUser, erroSenha):
+            #função que manda as informações da interface para a função da clasee User que validará
+            #o cadastro do usuário
+            if(User().achaUser(txtUser.text, txtPassWord.text, erroUser, erroSenha) == 1):
+                screenM.current = 'telaInicial'
+                txtUser.text = ''
+                txtPassWord.text = ''
+                erroSenha.source = 'placeholder.png'
+                erroUser.source = 'placeholder.png'
+            else:
+                pass
+
+        def compara(self, box, txtPonto, lblComp):
+            #função que decide a comparação à ser realizada pela classe do campeonato
+            box.clear_widgets()
+            if(self.tglComparacao == 'Pontuação' and txtPonto.isnumeric()):
+                TabelaCampeonato().compPontuacao(box, int(txtPonto))
+                lblComp.text = "Times com pontuação igual ou  superior à " + txtPonto
+            elif(self.tglComparacao == 'Aproveitamento' and txtPonto.isnumeric()):
+                TabelaCampeonato().compAproveitamento(box, int(txtPonto))
+                lblComp.text = "Times com aproveitamento igual ou superior à "+ txtPonto + "%"
+            else:
+                pass
+            
+        def trocaPagina(self, pgLayout):
+            #função para fazer o loop das páginas
+            if(pgLayout.page < 3):
+                pgLayout.page += 1
+            else:
+                pgLayout.page = 0
+        def setToggle(self, tglBtn):
+            #função que recebe um objeto toggleButton e traduz a informação para uma variavel global
+            #que será usada para fazer pesquisas futuras
+            if(tglBtn.text == 'Acima de 75'):
+                self.aprovAux = 75
+            elif(tglBtn.text == 'Acima de 50'):
+                self.aprovAux = 50           
+                
+            else:                
+                self.aprovAux = -1
+        def setToggleComp(self,tglButton):
+            #mesmo conceito da função anterior
+            self.tglComparacao = tglButton.text
+            
+                
+        def encontraTime(self,box, saldoMin,saldoMax):
+            #função que manda as informações para a classe da tabela de times para realizar a pesquisa
+            box.clear_widgets()
+            if(saldoMin != '' and saldoMax != '' and self.aprovAux != 0):
+                TabelaCampeonato().achaClube(box,self.aprovAux,int(saldoMin),int(saldoMax))
+
+class TabelaCampeonato():
+
+    dbLink = sqlite3.connect('bancoDeDados.db')
+    
+    def __init__(self):
+        #construtor cria a tabela a ser usada caso não exista ainda
+        self.dbLink.execute(
+            'CREATE TABLE IF NOT EXISTS Campeonato(id integer PRIMARY KEY AUTOINCREMENT, Clube text, Aproveitamento decimal, Pontos integer,Vitorias integer, Empates integer, Jogos integer, GolsMarcados integer, GolsSofridos integer,Saldo integer)'
+            )
+        self.cur = self.dbLink.cursor()#também ja instancia o cursor
+        
+    def inserir(self, clube, vitorias, empates, jogos, golM, golS):
+        self.dbLink = sqlite3.connect('bancoDeDados.db')
+        self.aux1 = int(vitorias)
+        self.aux2 = int(empates)
+        self.aux3 = int(jogos)
+        self.aux4 = int(golM)
+        self.aux5 = int(golS)
+        self.pontos = (self.aux1*3)+(self.aux2)
+        self.saldo = self.aux4 - self.aux5
+        if(self.aux1 > 0):
+            self.aprov = float((self.aux1*3)/self.pontos) * 100.0
+        else:
+            self.aprov = 0
+        self.dbLink.execute(
+            'INSERT INTO Campeonato VALUES(NULL,?,?,?,?,?,?,?,?,?)', (clube,self.aprov,self.pontos,self.aux1,self.aux2,self.aux3,self.aux4,self.aux5,self.saldo)
+            )#o valor NULL serve como place-holder para o ID da tabela, que é
+            #automaticamente incrementado 
+
+        self.dbLink.commit()
+        self.dbLink.close()#o db é aberto e fechado em cada chamada de função
+        #para evitar vazamentos de memória
+
+    def achaClube(self, box, aprov, saldoMin, saldoMax):
+        self.dbLink = sqlite3.connect('bancoDeDados.db')
+        self.cur.execute('SELECT Clube, Aproveitamento , Pontos ,Vitorias , Empates , Jogos, GolsMarcados, GolsSofridos,Saldo FROM Campeonato WHERE Aproveitamento > (?) OR Aproveitamento = (?)',(aprov, aprov))
+        self.listaAux = self.cur.fetchall()#retorna uma lista bidimensional
+        #onde o primeiro indice é a linha da tabela e o segundo indice
+        #são as colunas, na ordem requisitada pelo SELECT na linha de SQL
+        self.listaIds = ["Nome - ","Aproveitamento(%) - ","Pontos - ","Vitórias - ",
+                         "Empates - ","Jogos - ","Gols Marcados - ","Gols Sofridos - ",
+                         "Saldo: "]
+        for i in range(len(self.listaAux)):
+            for j in range(9):
+                if(self.listaAux[i][8] >= saldoMin and self.listaAux[i][8] <= saldoMax):
+                    box.add_widget(Label(font_size = 20,
+                                         text = self.listaIds[j] + str(self.listaAux[i][j]),
+                                         size_hint_y = None, height = 25,
+                                         text_size = [box.width,25],
+                                         halign = 'left' ))
+        self.dbLink.close()
+
+
+    def compPontuacao(self, box, pont):
+        #função para comparar pontuações de times cadastrados
+        self.dbLink = sqlite3.connect('bancoDeDados.db')
+        self.cur.execute('SELECT Clube,Pontos FROM Campeonato WHERE Pontos > (?) OR Pontos = (?)', (pont, pont))
+        self.listaAux = self.cur.fetchall()        
+        self.listaIds = ["Nome - ","Pontos - "]
+        for i in range(len(self.listaAux)):
+            for j in range(2):               
+                box.add_widget(Label(font_size = 20,
+                                     text = self.listaIds[j] + str(self.listaAux[i][j]),
+                                     size_hint_y = None, height = 25,
+                                     text_size = [box.width,25],
+                                     halign = 'left' ))
+        self.dbLink.close()
+    def compAproveitamento(self,box,aprov):
+        #função para comparar aproveitamento dos times cadastrados
+        self.dbLink = sqlite3.connect('bancoDeDados.db')
+        self.cur.execute('SELECT  Clube, Aproveitamento FROM Campeonato WHERE Aproveitamento > (?) OR Aproveitamento = (?)', (aprov, aprov))
+        self.listaAux = self.cur.fetchall()        
+        self.listaIds = ["Nome - ","Aproveitamento(%) - "]
+        for i in range(len(self.listaAux)):
+            for j in range(2):               
+                box.add_widget(Label(font_size = 20,
+                                     text = self.listaIds[j] + str(self.listaAux[i][j]),
+                                     size_hint_y = None, height = 25,
+                                     text_size = [box.width,25],
+                                     halign = 'left' ))
+        self.dbLink.close()
+
+class User():
+    dbLink = sqlite3.connect('bancoDeDados.db')
+    
+    def __init__(self):#construtor cria a tabela a ser usada caso não exista ainda
+        self.dbLink.execute(
+            'CREATE TABLE IF NOT EXISTS Usuario(id integer PRIMARY KEY AUTOINCREMENT, User text, Senha text)')
+        self.cur = self.dbLink.cursor()#também instancia o cursor
+    def inserir(self, user, senha): #antes de fazer o login deve-se inserir
+        #as informações de cadastro e clicar em "cadastrar" para registrar o login
+        #no banco de dados
+        self.dbLink = sqlite3.connect('bancoDeDados.db')              
+        self.cur.execute('SELECT * FROM Usuario WHERE User =:user', {'user':user.text})
+        self.listaVerificaUser = self.cur.fetchall()#se esta lista tiver tamanho maior que 0
+        #significa que já existe um usuario com o nome fornecido
+        if(len(self.listaVerificaUser) == 0):
+            self.dbLink.execute(
+                'INSERT INTO Usuario VALUES(NULL,?,?)', (user.text, senha.text)
+                )
+            user.text = ''
+            senha.text = ''
+            
+        else:
+            pass
+
+        self.dbLink.commit()
+        self.dbLink.close()
+    def achaUser(self, user, senha, erroUser, erroSenha):
+        self.dbLink = sqlite3.connect('bancoDeDados.db')# abre o db
+        self.cur.execute('SELECT * FROM Usuario WHERE User = (?) OR Senha = (?)', (user,senha))
+        self.listaAux = self.cur.fetchall()
+        if(len(self.listaAux)>0):
+            if(self.listaAux[0][1] == user and self.listaAux[0][2] != senha):
+                #[0][1] == coluna do usuario, [0][2] == coluna da senha
+                erroSenha.source = 'close.png'
+                return -1
+            else:#de acordo com a informação errada, é exibida um erro ao lado
+                #da TextInput com a informação à ser corrigida
+                erroSenha.source = 'placeholder.png'
+            if(self.listaAux[0][1] != user and self.listaAux[0][2] == senha):
+                erroUser.source = 'close.png'
+                return -1
+            else:
+                erroSenha.source = 'placeholder.png'
+            
+            if(self.listaAux[0][1] == user and self.listaAux[0][2] == senha):
+                return 1
+            else:
+                return -1
+        else:
+            erroSenha.source = 'close.png'
+            erroUser.source = 'close.png'            
+            return -1
+        self.dbLink.close() #fecha o db
+
+
+Projeto().run()
