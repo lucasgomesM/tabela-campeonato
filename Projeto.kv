@@ -1,0 +1,424 @@
+<Tela>:
+    id: scManager
+    Screen:
+        name: 'telaSenha'
+        canvas.before:
+            Color:
+                rgba:  0.2,0.15,0.45,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        Image:
+            id: erroUser
+            source: 'placeholder.png'
+            pos: -28,-75
+        Image:
+            id: erroSenha
+            source: 'placeholder.png'
+            pos: -28,-134
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 20
+            padding: 5
+            Image:
+                source: 'bemVindo.png'
+                
+            BoxLayout:
+                size_hint_y: None
+                height: 40
+                Label:
+                    text: 'USUARIO:'
+                TextInput:
+                    id: txtUser
+                    font_size: 20
+            BoxLayout:
+                size_hint_y: None
+                height: 40
+                Label:
+                    text: 'SENHA:'
+                TextInput:
+                    id: txtPassWord
+                    font_size: 20
+       
+            Button:
+                background_normal: 'butEntrarN.png'
+                background_down: 'butEntrarD.png'
+                border: 0,0,0,0
+                size_hint: None,None
+                pos_hint: {'center_x': 0.5}
+                size: 150,50
+                on_release: app.encontraUser(scManager,txtUser,txtPassWord,erroUser,erroSenha)
+            Button:
+                background_normal: 'butCadN.png'
+                background_down: 'butCadD.png'
+                border: 0,0,0,0
+                size_hint: None,None
+                pos_hint: {'center_x': 0.5}
+                size: 150,50
+                on_release: app.adicionaUser(scManager,txtUser,txtPassWord)
+
+
+    Screen:
+        name: 'help'
+        canvas.before:
+            Color:
+                rgba:  0.5,0.6,0.7,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        
+        PageLayout:
+            id: pgLayout
+            border: 0
+            size_hint_y: None
+            height: 320
+            pos_hint: {'center_y': 0.7}
+            Image:
+                source: 'pagina1.png'
+            Image:
+                source: 'pagina2.png'
+            Image:
+                source: 'pagina3.png'
+            Image:
+                source: 'pagina4.png'
+                
+        Button:
+            background_normal: 'butNextN.png'
+            background_down: 'butNextD.png'
+            border: 0,0,0,0
+            font_size: 30
+            size_hint: None,None
+            pos: 635,10
+            size: 150,50
+            on_release: app.trocaPagina(pgLayout)
+                
+        Button:
+            background_normal: 'butVoltarN.png'
+            background_down: 'butVoltarD.png'
+            border: 0,0,0,0
+            font_size: 20
+            size_hint: None,None
+            pos: 10,10
+            size: 150,50
+            on_release: scManager.current = 'telaInicial'
+    Screen:
+        name: 'telaInicial'
+        canvas.before:
+            Color:
+                rgba:  0.45,0.15,0.45,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        Button:
+            background_normal: 'butHelpN.png'
+            background_down: 'butHelpD.png'
+            border: 0,0,0,0
+            font_size: 20
+            size_hint: None,None
+            pos: 10,10
+            size: 150,50
+            on_release: scManager.current = 'help'
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 10
+            padding: 5
+            Image:
+                source: "bolla.png"
+            Button:
+                background_normal: 'butIncN.png'
+                background_down: 'butIncD.png'
+                border: 0,0,0,0
+                font_size: 30
+                size_hint: None,None
+                pos_hint: {'center_x': 0.5}
+                size: 200,75
+                on_release: scManager.current = 'Incluir'
+            Button:
+                background_normal: 'butPesqN.png'
+                background_down: 'butPesqD.png'
+                border: 0,0,0,0
+                font_size: 30
+                size_hint: None,None
+                pos_hint: {'center_x': 0.5}
+                size: 200,75
+                on_release: scManager.current = "Pesquisa"
+            Button:
+                background_normal: 'butFecharN.png'
+                background_down: 'butFecharD.png'
+                border: 0,0,0,0
+                font_size: 30
+                size_hint: None,None
+                pos_hint: {'center_x': 0.5}
+                size: 200,75
+                on_release: app.stop()
+
+    Screen:
+        name: 'Comparar'
+        canvas.before:
+            Color:
+                rgba: 0.5,0.6,0.7,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        Label:
+            text: 'Comparar time'
+            pos_hint: {'center_x': 0.5}
+            pos_hint: {'center_y': 0.85}
+            font_size: 50
+            color: [0.2,0,0.8,1]
+
+        BoxLayout:
+            
+            ToggleButton:
+                pos_hint: {'center_y':0.7}
+                size_hint_y: None
+                height: 40
+                id: tglCompAprov
+                text: 'Aproveitamento'
+                on_press: app.setToggleComp(tglCompAprov)
+                group: 'tglCompSearch'
+            ToggleButton:
+                pos_hint: {'center_y':0.7}
+                size_hint_y: None
+                height: 40
+                id: tglCompPont
+                text: 'Pontuação'
+                on_press: app.setToggleComp(tglCompPont)
+                group: 'tglCompSearch'
+                
+        TextInput:
+            id: txtComp
+            pos_hint: {'center_y':0.6}
+            halign: 'center'
+            size_hint: None,None
+            size: 800, 40
+            
+        BoxLayout:            
+            spacing: 10
+            padding: 5 
+                
+            ScrollView:
+                pos_hint: {'center_y':0.4}
+                size_hint: None,None
+                size: 785, 160
+                canvas.before:
+                    Color:
+                        rgba: 0.2,0.15,0.45,1
+                    Rectangle:
+                        size: self.size
+                        pos: self.pos
+                BoxLayout:
+                    id: scrollBoxComp
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: self.minimum_height
+        Label:
+            id: lblComp
+            text: '  '
+            pos: 0, -180
+            font_size: 30
+            color: [0.2,0,0.8,1]
+            
+        Button:
+            background_normal: 'butCompararN.png'
+            background_down: 'butCompararD.png'
+            border: 0,0,0,0
+            font_size: 30
+            size_hint: None,None
+            pos: 635,10
+            on_release: app.compara(scrollBoxComp,txtComp.text,lblComp)
+            size: 150,50
+        Button:
+            background_normal: 'butVoltarN.png'
+            background_down: 'butVoltarD.png'
+            border: 0,0,0,0
+            font_size: 20
+            size_hint: None,None
+            pos: 10,10
+            size: 150,50
+            on_release: scManager.current = 'telaInicial'
+                
+            
+       
+            
+    Screen:
+        name: 'Incluir'
+        canvas.before:
+            Color:
+                rgba: 0.5,0.6,0.7,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        Label:
+            text: 'Adicionar time'
+            pos_hint: {'center_x': 0.5}
+            pos_hint: {'center_y': 0.85}
+            font_size: 50
+            color: [0.2,0,0.8,1]
+        Button:
+            background_normal: 'butCompararN.png'
+            background_down: 'butCompararD.png'
+            border: 0,0,0,0
+            font_size: 20
+            size_hint: None,None
+            pos: 635,10
+            size: 150,50
+            on_release: scManager.current = 'Comparar'
+            
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 40
+            padding: 5
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: 180
+                spacing: 10
+                padding: 5
+                BoxLayout:
+                    size_hint_y: None
+                    height: 40
+                    Label:
+                        text: 'NOME:'
+                    TextInput:
+                        id: txtName
+                        font_size: 20
+                BoxLayout:
+                    size_hint_y: None
+                    height: 40
+                    Label:
+                        text: 'VITÓRIAS:'
+                    TextInput:
+                        id: txtWins
+                        font_size: 20
+                BoxLayout:
+                    size_hint_y: None
+                    height: 40
+                    Label:
+                        text: 'EMPATES:'
+                    TextInput:
+                        id: txtDraws
+                        font_size: 20
+                BoxLayout:
+                    size_hint_y: None
+                    height: 40
+                    Label:
+                        text: 'JOGOS:'
+                    TextInput:
+                        id: txtGames
+                        font_size: 20
+                BoxLayout:
+                    size_hint_y: None
+                    height: 40
+                    Label:
+                        text: 'GOLS FEITOS:'
+                    TextInput:
+                        id: txtGolsM
+                        font_size: 20
+                BoxLayout:
+                    size_hint_y: None
+                    height: 40
+                    Label:
+                        text: 'GOLS SOFRIDOS:'
+                    TextInput:
+                        id: txtTaken
+                        font_size: 20            
+                
+                Button:
+                    background_normal: 'butIncN.png'
+                    background_down: 'butIncD.png'
+                    border: 0,0,0,0
+                    font_size: 30
+                    size_hint: None,None
+                    pos_hint: {'center_x': 0.5}
+                    size: 150,50
+                    on_press: app.addClube(txtName,txtWins,txtDraws,txtGames,txtGolsM,txtTaken)
+
+                Button:
+                    background_normal: 'butVoltarN.png'
+                    background_down: 'butVoltarD.png'
+                    border: 0,0,0,0
+                    font_size: 30
+                    size_hint: None,None
+                    pos_hint: {'center_x': 0.5}
+                    size: 150,50
+                    on_release: scManager.current = 'telaInicial'
+    Screen:
+        name: 'Pesquisa'
+        canvas.before:
+            Color:
+                rgba: 0.5,0.6,0.7,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 20
+            padding: 10
+            Label:
+                text: "Pesquisa de Times"
+                font_size: 40
+                color: [0,0,0.6,1]
+            BoxLayout:
+                size_hint_y: None
+                height: 40
+                Label:
+                    text: 'Aproveitamento'
+                ToggleButton:
+                    id: acima75
+                    text: 'Acima de 75'
+                    on_press: app.setToggle(acima75)
+                    group: 'tglAprovSearch'
+                ToggleButton:
+                    id: acima50
+                    text: 'Acima de 50'
+                    on_press: app.setToggle(acima50)
+                    group: 'tglAprovSearch'
+                ToggleButton:
+                    id: searchAny
+                    text: 'Qualquer'
+                    on_press: app.setToggle(searchAny)
+                    group: 'tglAprovSearch'
+                    
+            BoxLayout:
+                size_hint_y: None
+                height: 40
+                Label:
+                    text: 'SALDO MIN:'
+                TextInput:
+                    id: txtMin
+                    font_size: 20
+                Label:
+                    text: 'MAX:'
+                TextInput:
+                    id: txtMax
+                    font_size: 20
+
+            Button:
+                background_normal: 'butPesqN.png'
+                background_down: 'butPesqD.png'
+                border: 0,0,0,0
+                font_size: 20
+                size_hint: None,None
+                pos_hint: {'center_x': 0.5}
+                size: 150,50
+                on_press: app.encontraTime(scrollBox,txtMin.text,txtMax.text)
+                
+            ScrollView:
+                BoxLayout:
+                    id: scrollBox
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: self.minimum_height
+
+            Button:
+                background_normal: 'butVoltarN.png'
+                background_down: 'butVoltarD.png'                    
+                border: 0,0,0,0
+                font_size: 15
+                size_hint: None,None
+                pos: 0,0
+                size: 150,50
+                on_release: scManager.current = 'telaInicial'
